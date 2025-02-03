@@ -13,23 +13,35 @@ const MainScreen = ({ navigation }) => {
   useFocusEffect(
     React.useCallback(() => {
       loadScore();
+      loadAutoClickerStatus();
       loadClickMultiplier();
       setCanClick(true);  // Разрешаем клик, когда экран активен
 
-      // Запускаем автокликер, если он активен
-      if (autoClickerActive) {
-        startAutoClicker();
-      }
-
-      return () => {
-        // Останавливаем автокликер, если экран уходит из фокуса
-        if (autoClickerInterval.current) {
-          clearInterval(autoClickerInterval.current);
-          autoClickerInterval.current = null;
-        }
-      };
-    }, [autoClickerActive])
+    }, [])
   );
+
+  useEffect(() => {
+      if (autoClickerActive) {
+        const interval = setInterval(() => {
+          const newScore = score + clickMultiplier;
+          saveScore(newScore);
+        }, 1000); // Автоклик каждую секунду
+  
+        return () => clearInterval(interval); // Очищаем интервал, когда автокликер выключен
+      }
+    }, [autoClickerActive, score, clickMultiplier]);
+
+  const loadAutoClickerStatus = async () => {
+    try {
+      const status = await AsyncStorage.getItem("autoClicker");
+      if (status === "true") {
+        setAutoClickerActive(true);
+      }
+    } catch (error) {
+      console.error("Ошибка загрузки статуса автокликера", error);
+    }
+  };
+
 
   const loadScore = async () => {
     try {
@@ -69,30 +81,7 @@ const MainScreen = ({ navigation }) => {
     }
   };
 
-  // Функция для автокликера
-  const startAutoClicker = () => {
-    if (!autoClickerInterval.current) {
-      autoClickerInterval.current = setInterval(() => {
-        const newScore = score + clickMultiplier;
-        saveScore(newScore);
-      }, 1000);  // Автокликер каждые 1000 миллисекунд
-    }
-  };
-
-  // Функция для покупки автокликера
-  const toggleAutoClicker = () => {
-    if (autoClickerActive) {
-      // Останавливаем автокликер
-      if (autoClickerInterval.current) {
-        clearInterval(autoClickerInterval.current);
-        autoClickerInterval.current = null;
-      }
-    } else {
-      // Запускаем автокликер
-      startAutoClicker();
-    }
-    setAutoClickerActive(!autoClickerActive);
-  };
+  
 
   return (
     <View style={styles.container}>
@@ -105,15 +94,6 @@ const MainScreen = ({ navigation }) => {
         disabled={!canClick}
       >
         <Text style={styles.buttonText}>Кликни!</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.autoClickerButton}
-        onPress={toggleAutoClicker}
-      >
-        <Text style={styles.buttonText}>
-          {autoClickerActive ? "Остановить автокликер" : "Запустить автокликер"}
-        </Text>
       </TouchableOpacity>
     </View>
   );
