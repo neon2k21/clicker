@@ -114,9 +114,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#4CAF50",
     padding: 20,
     borderRadius: 10,
-    marginBottom: 20,
-  },
-  autoClickerButton: {
+    marginBottom: 20, }, autoClickerButton: {
     backgroundColor: "#ff9800",
     padding: 15,
     borderRadius: 10,
